@@ -1,0 +1,93 @@
+name: Build macOS DMG
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'flutter/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout 代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Rust 工具链
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-apple-darwin,aarch64-apple-darwin
+
+      - name: 缓存 Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: 安装 Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+          cache: true
+
+      - name: 安装系统依赖
+        run: |
+          brew install cmake ninja nasm
+
+      - name: Flutter pub get
+        working-directory: flutter
+        run: |
+          flutter clean
+          flutter pub get
+
+      - name: 编译 Rust FFI
+        run: |
+          cargo build --features flutter --lib --release --target x86_64-apple-darwin
+          cargo build --features flutter --lib --release --target aarch64-apple-darwin
+          mkdir -p target/universal/release
+          lipo -create \
+            target/x86_64-apple-darwin/release/librustdesk.dylib \
+            target/aarch64-apple-darwin/release/librustdesk.dylib \
+            -output target/universal/release/librustdesk.dylib
+
+      - name: 复制 dylib 到 Flutter
+        run: |
+          mkdir -p flutter/macos/Libs
+          cp target/universal/release/librustdesk.dylib flutter/macos/Libs/
+
+      - name: 编译 Flutter macOS
+        working-directory: flutter
+        run: |
+          flutter build macos --release \
+            --dart-define=PILOTX_ROLE=controller \
+            --dart-define=PILOTX_LICENSE_API=https://yishengyuzhou.asia/pilotx-admin
+
+      - name: 签名 & 打包 DMG
+        run: |
+          APP_BUNDLE="flutter/build/macos/Build/Products/Release/PilotX.app"
+          codesign --deep --force --sign "-" "$APP_BUNDLE"
+          mkdir -p dist
+          hdiutil create \
+            -volname "PilotX" \
+            -srcfolder "$APP_BUNDLE" \
+            -ov -format UDZO \
+            dist/PilotX-controller-mac.dmg
+
+      - name: 上传 DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: PilotX-mac-dmg
+          path: dist/*.dmg
+          retention-days: 30
