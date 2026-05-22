@@ -7,6 +7,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_hbb/models/state_model.dart';
+import 'package:flutter_hbb/pilotx/pilotx_config.dart';
 
 import '../../consts.dart';
 import '../../common/widgets/overlay.dart';
@@ -138,6 +139,15 @@ class _RemotePageState extends State<RemotePage>
       display: widget.display,
       displays: widget.displays,
     );
+    if (PilotX.isController) {
+      Future.microtask(() async {
+        await bind.sessionSetViewStyle(
+          sessionId: _ffi.sessionId,
+          value: kRemoteViewStyleAdaptive,
+        );
+        await _ffi.canvasModel.updateViewStyle();
+      });
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: []);
       _ffi.dialogManager

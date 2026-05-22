@@ -16,6 +16,7 @@ import 'package:flutter_hbb/desktop/widgets/update_progress.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
 import 'package:flutter_hbb/models/server_model.dart';
 import 'package:flutter_hbb/models/state_model.dart';
+import 'package:flutter_hbb/pilotx/pilotx_config.dart';
 import 'package:flutter_hbb/plugin/ui_manager.dart';
 import 'package:flutter_hbb/utils/multi_window_manager.dart';
 import 'package:flutter_hbb/utils/platform_channel.dart';
@@ -49,6 +50,9 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   var watchIsInputMonitoring = false;
   var watchIsCanRecordAudio = false;
   Timer? _updateTimer;
+  Timer? _pilotXLicenseCountdownTimer;
+  Worker? _pilotXLicenseWorker;
+  PilotXLicenseState? _pilotXLicenseState;
   bool isCardClosed = false;
 
   final RxBool _editHover = false.obs;
@@ -59,6 +63,13 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    if (PilotX.isController) {
+      return _buildBlock(child: buildPilotXControllerHome(context));
+    }
+    if (PilotX.isControlled) {
+      return _buildBlock(child: buildPilotXControlledHome(context));
+    }
+
     final isIncomingOnly = bind.isIncomingOnly();
     return _buildBlock(
         child: Row(
@@ -69,6 +80,267 @@ class _DesktopHomePageState extends State<DesktopHomePage>
         if (!isIncomingOnly) Expanded(child: buildRightPane(context)),
       ],
     ));
+  }
+
+  Widget buildPilotXControllerHome(BuildContext context) {
+    final textColor = Theme.of(context).textTheme.titleLarge?.color;
+    final licenseCountdown = buildPilotXLicenseCountdown(context);
+    return Container(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              loadIcon(64),
+              const SizedBox(height: 14),
+              Text(
+                PilotX.appName,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: textColor,
+                    ),
+              ),
+              if (licenseCountdown != null) ...[
+                const SizedBox(height: 8),
+                licenseCountdown,
+              ],
+              const SizedBox(height: 24),
+              const ConnectionPage(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget? buildPilotXLicenseCountdown(BuildContext context) {
+    final state = _pilotXLicenseState;
+    if (state == null || state.code.isEmpty) return null;
+
+    final remaining = Duration(
+      milliseconds: state.expiresAt - DateTime.now().millisecondsSinceEpoch,
+    );
+    final expired = remaining.inMilliseconds <= 0;
+    final warning = !expired && remaining < const Duration(hours: 2);
+    final color = expired || warning
+        ? Colors.red.shade700
+        : Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.72);
+    final borderColor = expired || warning
+        ? Colors.red.shade200
+        : Theme.of(context).dividerColor.withOpacity(0.42);
+    final text = expired
+        ? '\u8bb8\u53ef\u8bc1\u5df2\u5931\u6548'
+        : '\u8bb8\u53ef\u8bc1\u5269\u4f59\u65f6\u95f4\uff1a${formatPilotXLicenseRemaining(remaining)}';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        border: Border.all(color: borderColor),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        text,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: color,
+              fontWeight:
+                  expired || warning ? FontWeight.w700 : FontWeight.w600,
+              letterSpacing: 0,
+            ),
+      ),
+    );
+  }
+
+  String formatPilotXLicenseRemaining(Duration remaining) {
+    final days = remaining.inDays;
+    final hours = remaining.inHours % 24;
+    final minutes = remaining.inMinutes % 60;
+    if (days > 0) {
+      return '$days\u5929 $hours\u5c0f\u65f6';
+    }
+    if (hours > 0) {
+      return '$hours\u5c0f\u65f6 $minutes\u5206\u949f';
+    }
+    return '${remaining.inMinutes.clamp(0, 59)}\u5206\u949f';
+  }
+
+  Widget buildPilotXControlledHome(BuildContext context) {
+    final textColor = Theme.of(context).textTheme.titleLarge?.color;
+    return ChangeNotifierProvider.value(
+      value: gFFI.serverModel,
+      child: Consumer<ServerModel>(
+        builder: (context, model, child) {
+          return Container(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            child: Center(
+              child: SingleChildScrollView(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 460),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      loadIcon(68),
+                      const SizedBox(height: 14),
+                      Text(
+                        PilotX.appName,
+                        style:
+                            Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: textColor,
+                                ),
+                      ),
+                      const SizedBox(height: 28),
+                      buildPilotXCredentialPanel(context, model),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget buildPilotXCredentialPanel(BuildContext context, ServerModel model) {
+    final divider = Theme.of(context).dividerColor.withOpacity(0.38);
+    final showOneTime = model.approveMode != 'click' &&
+        model.verificationMethod != kUsePermanentPassword;
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        border: Border.all(color: divider),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          buildPilotXCredentialField(
+            context,
+            label: translate('ID'),
+            controller: model.serverId,
+            icon: Icons.badge_outlined,
+            onCopy: () => copyPilotXCredential(model.serverId.text),
+          ),
+          const SizedBox(height: 16),
+          buildPilotXCredentialField(
+            context,
+            label: translate('One-time Password'),
+            controller: model.serverPasswd,
+            icon: Icons.password_outlined,
+            onCopy: showOneTime
+                ? () => copyPilotXCredential(model.serverPasswd.text)
+                : null,
+            onRefresh:
+                showOneTime ? () => bind.mainUpdateTemporaryPassword() : null,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildPilotXCredentialField(
+    BuildContext context, {
+    required String label,
+    required TextEditingController controller,
+    required IconData icon,
+    required VoidCallback? onCopy,
+    VoidCallback? onRefresh,
+  }) {
+    final textColor = Theme.of(context).textTheme.titleLarge?.color;
+    final muted = textColor?.withOpacity(0.68);
+    final borderColor = Theme.of(context).dividerColor.withOpacity(0.5);
+    final actionColor = Theme.of(context).colorScheme.primary;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0,
+                color: muted,
+              ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          height: 58,
+          decoration: BoxDecoration(
+            border: Border.all(color: borderColor),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 48,
+                child: Icon(icon, size: 21, color: MyTheme.accent),
+              ),
+              Expanded(
+                child: TextFormField(
+                  controller: controller,
+                  readOnly: true,
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(vertical: 17),
+                  ),
+                  style: TextStyle(
+                    fontFamily: 'WorkSans',
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0,
+                    color: textColor,
+                  ),
+                ).workaroundFreezeLinuxMint(),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    foregroundColor: actionColor,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    minimumSize: const Size(52, 34),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  child: const Text('\u590d\u5236'),
+                  onPressed: onCopy,
+                ),
+              ),
+              if (onRefresh != null)
+                Padding(
+                  padding: const EdgeInsets.only(left: 4),
+                  child: TextButton(
+                    style: TextButton.styleFrom(
+                      foregroundColor: actionColor,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      minimumSize: const Size(76, 34),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    child: const Text('\u5237\u65b0\u5bc6\u7801'),
+                    onPressed: onRefresh,
+                  ),
+                ),
+              const SizedBox(width: 8),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void copyPilotXCredential(String value) {
+    final text = value.trim();
+    if (text.isEmpty) return;
+    Clipboard.setData(ClipboardData(text: text));
+    showToast(translate('Copied'));
   }
 
   Widget _buildBlock({required Widget child}) {
@@ -259,7 +531,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     final textColor = Theme.of(context).textTheme.titleLarge?.color;
     RxBool hover = false.obs;
     return InkWell(
-      onTap: DesktopTabPage.onAddSetting,
+      onTap: () => DesktopTabPage.onAddSetting(),
       child: Tooltip(
         message: translate('Settings'),
         child: Obx(
@@ -359,7 +631,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                           ),
                           onHover: (value) => refreshHover.value = value,
                         ).marginOnly(right: 8, top: 4),
-                      if (!bind.isDisableSettings())
+                      if (!bind.isDisableSettings() && !PilotX.isPilotX)
                         InkWell(
                           child: Tooltip(
                             message: translate('Change Password'),
@@ -697,6 +969,19 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   @override
   void initState() {
     super.initState();
+    if (PilotX.isController) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _refreshPilotXLicenseCountdown();
+      });
+      _pilotXLicenseCountdownTimer = Timer.periodic(
+        const Duration(minutes: 1),
+        (_) => _refreshPilotXLicenseCountdown(),
+      );
+      _pilotXLicenseWorker = ever<int>(
+        PilotXLicenseManager.licenseRevision,
+        (_) => _refreshPilotXLicenseCountdown(),
+      );
+    }
     _updateTimer = periodic_immediate(const Duration(seconds: 1), () async {
       await gFFI.serverModel.fetchID();
       final error = await bind.mainGetError();
@@ -767,7 +1052,8 @@ class _DesktopHomePageState extends State<DesktopHomePage>
 
     bool isChattyMethod(String methodName) {
       switch (methodName) {
-        case kWindowBumpMouse: return true;
+        case kWindowBumpMouse:
+          return true;
       }
 
       return false;
@@ -776,7 +1062,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     rustDeskWinManager.setMethodHandler((call, fromWindowId) async {
       if (!isChattyMethod(call.method)) {
         debugPrint(
-          "[Main] call ${call.method} with args ${call.arguments} from window $fromWindowId");
+            "[Main] call ${call.method} with args ${call.arguments} from window $fromWindowId");
       }
       if (call.method == kWindowMainWindowOnTop) {
         windowOnTop(null);
@@ -811,9 +1097,8 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           connToken: call.arguments['connToken'],
         );
       } else if (call.method == kWindowBumpMouse) {
-        return RdPlatformChannel.instance.bumpMouse(
-          dx: call.arguments['dx'],
-          dy: call.arguments['dy']);
+        return RdPlatformChannel.instance
+            .bumpMouse(dx: call.arguments['dx'], dy: call.arguments['dy']);
       } else if (call.method == kWindowEventMoveTabToNewWindow) {
         final args = call.arguments.split(',');
         int? windowId;
@@ -860,6 +1145,13 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     WidgetsBinding.instance.addObserver(this);
   }
 
+  Future<void> _refreshPilotXLicenseCountdown() async {
+    if (!PilotX.isController) return;
+    final state = await PilotXLicenseManager.current();
+    if (!mounted) return;
+    setState(() => _pilotXLicenseState = state);
+  }
+
   _updateWindowSize() {
     RenderObject? renderObject = _childKey.currentContext?.findRenderObject();
     if (renderObject == null) {
@@ -879,6 +1171,8 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     _uniLinksSubscription?.cancel();
     Get.delete<RxBool>(tag: 'stop-service');
     _updateTimer?.cancel();
+    _pilotXLicenseCountdownTimer?.cancel();
+    _pilotXLicenseWorker?.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }

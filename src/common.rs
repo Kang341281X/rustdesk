@@ -1782,14 +1782,39 @@ pub fn rustdesk_interval(i: Interval) -> ThrottledInterval {
     ThrottledInterval::new(i)
 }
 
+pub fn apply_pilotx_defaults() {
+    *config::APP_NAME.write().unwrap() = "PilotX".to_owned();
+    {
+        let mut settings = config::OVERWRITE_SETTINGS.write().unwrap();
+        settings.insert(
+            keys::OPTION_CUSTOM_RENDEZVOUS_SERVER.to_owned(),
+            "121.199.7.66".to_owned(),
+        );
+        settings.insert(
+            keys::OPTION_RELAY_SERVER.to_owned(),
+            "121.199.7.66".to_owned(),
+        );
+        settings.insert(
+            keys::OPTION_KEY.to_owned(),
+            "gxljZ40WKnvY80C0zqyc6z7VbiiXagK3SMaV1SlYoJE=".to_owned(),
+        );
+    }
+    config::DEFAULT_DISPLAY_SETTINGS
+        .write()
+        .unwrap()
+        .insert(keys::OPTION_VIEW_STYLE.to_owned(), "adaptive".to_owned());
+}
+
 pub fn load_custom_client() {
     #[cfg(debug_assertions)]
     if let Ok(data) = std::fs::read_to_string("./custom.txt") {
         read_custom_client(data.trim());
+        apply_pilotx_defaults();
         return;
     }
     let Some(path) = std::env::current_exe().map_or(None, |x| x.parent().map(|x| x.to_path_buf()))
     else {
+        apply_pilotx_defaults();
         return;
     };
     #[cfg(target_os = "macos")]
@@ -1798,10 +1823,12 @@ pub fn load_custom_client() {
     if path.is_file() {
         let Ok(data) = std::fs::read_to_string(&path) else {
             log::error!("Failed to read custom client config");
+            apply_pilotx_defaults();
             return;
         };
         read_custom_client(&data.trim());
     }
+    apply_pilotx_defaults();
 }
 
 fn read_custom_client_advanced_settings(

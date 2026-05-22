@@ -6,6 +6,7 @@ import 'package:flutter_hbb/desktop/pages/desktop_setting_page.dart';
 import 'package:flutter_hbb/desktop/widgets/tabbar_widget.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
 import 'package:flutter_hbb/models/state_model.dart';
+import 'package:flutter_hbb/pilotx/pilotx_config.dart';
 import 'package:get/get.dart';
 import 'package:window_manager/window_manager.dart';
 // import 'package:flutter/services.dart';
@@ -18,8 +19,14 @@ class DesktopTabPage extends StatefulWidget {
   @override
   State<DesktopTabPage> createState() => _DesktopTabPageState();
 
-  static void onAddSetting(
+  static Future<void> onAddSetting(
       {SettingsTabKey initialPage = SettingsTabKey.general}) {
+    return _onAddSetting(initialPage: initialPage);
+  }
+
+  static Future<void> _onAddSetting(
+      {SettingsTabKey initialPage = SettingsTabKey.general}) async {
+    if (!await PilotX.requestSettingsAccess()) return;
     try {
       DesktopTabController tabController = Get.find<DesktopTabController>();
       tabController.add(TabInfo(
@@ -97,11 +104,12 @@ class _DesktopTabPageState extends State<DesktopTabPage> {
             body: DesktopTab(
               controller: tabController,
               tail: Offstage(
-                offstage: bind.isIncomingOnly() || bind.isDisableSettings(),
+                offstage: (!PilotX.isPilotX && bind.isIncomingOnly()) ||
+                    bind.isDisableSettings(),
                 child: ActionIcon(
                   message: 'Settings',
                   icon: IconFont.menu,
-                  onTap: DesktopTabPage.onAddSetting,
+                  onTap: () => DesktopTabPage.onAddSetting(),
                   isClose: false,
                 ),
               ),

@@ -1,0 +1,1301 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PilotX 许可证管理</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f3f6fa;
+      --panel: #ffffff;
+      --line: #d8e1ea;
+      --text: #172033;
+      --muted: #68778a;
+      --blue: #0a74d6;
+      --blue-dark: #075ca8;
+      --green: #13795b;
+      --amber: #a86405;
+      --red: #c23b4a;
+      --shadow: 0 10px 30px rgba(17, 32, 54, .08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "Segoe UI", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      min-height: 38px;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      padding: 8px 14px;
+      cursor: pointer;
+      background: #edf2f7;
+      color: var(--text);
+      transition: background .15s ease, border-color .15s ease, color .15s ease;
+    }
+
+    button:hover {
+      border-color: #bcc8d6;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: .55;
+    }
+
+    button.primary {
+      background: var(--blue);
+      color: #fff;
+    }
+
+    button.primary:hover {
+      background: var(--blue-dark);
+      border-color: var(--blue-dark);
+    }
+
+    button.danger {
+      background: var(--red);
+      color: #fff;
+    }
+
+    button.ghost {
+      background: #fff;
+      border-color: var(--line);
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 8px 10px;
+      background: #fff;
+      color: var(--text);
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .login-page {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .login-box {
+      width: min(420px, 100%);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .login-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .mark {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: 24px;
+      background: linear-gradient(135deg, #0a74d6, #3fb7d8);
+    }
+
+    .login-title {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .login-form {
+      display: grid;
+      gap: 14px;
+    }
+
+    .login-error {
+      min-height: 18px;
+      color: var(--red);
+      font-size: 13px;
+    }
+
+    .app {
+      min-height: 100vh;
+    }
+
+    header {
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 28px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 20px;
+      min-width: 0;
+    }
+
+    .brand-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .header-actions,
+    .actions,
+    .row-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    main {
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(130px, .9fr) minmax(110px, .7fr) minmax(180px, 1fr) minmax(180px, 1fr) minmax(130px, .8fr) auto;
+      gap: 12px;
+      align-items: end;
+      margin-bottom: 18px;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .metric,
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .metric {
+      padding: 16px;
+    }
+
+    .metric span {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .metric strong {
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .panel {
+      overflow: hidden;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .bulk-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .bulk-actions button {
+      min-height: 34px;
+      padding: 7px 12px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      min-width: 1120px;
+    }
+
+    col.col-select {
+      width: 5%;
+    }
+
+    col.col-code {
+      width: 18%;
+    }
+
+    col.col-status {
+      width: 8%;
+    }
+
+    col.col-duration {
+      width: 9%;
+    }
+
+    col.col-activated {
+      width: 13%;
+    }
+
+    col.col-note {
+      width: 16%;
+    }
+
+    col.col-device {
+      width: 14%;
+    }
+
+    col.col-actions {
+      width: 12%;
+    }
+
+    th,
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: middle;
+      font-size: 14px;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      background: #f8fafc;
+    }
+
+    td.code {
+      font-family: Consolas, "SFMono-Regular", monospace;
+      letter-spacing: .4px;
+      font-weight: 700;
+      word-break: break-all;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #eef2f7;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .status.active {
+      background: #e7f6ef;
+      color: var(--green);
+    }
+
+    .status.expired {
+      background: #fff3df;
+      color: var(--amber);
+    }
+
+    .status.revoked {
+      background: #fdecef;
+      color: var(--red);
+    }
+
+    .status.unused {
+      background: #edf2f7;
+      color: var(--muted);
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .ok {
+      color: var(--green);
+    }
+
+    .bad {
+      color: var(--red);
+    }
+
+    .mono {
+      font-family: Consolas, "SFMono-Regular", monospace;
+    }
+
+    .note-cell,
+    .device-cell {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .note-cell {
+      cursor: pointer;
+    }
+
+    .note-cell:hover {
+      background: #f0f4fa;
+      border-radius: 4px;
+    }
+
+    .note-edit-input {
+      width: 100%;
+      min-height: 30px;
+      border: 2px solid var(--blue);
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    .select-cell {
+      text-align: center;
+    }
+
+    .select-cell input {
+      width: 18px;
+      min-height: 18px;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .action-cell .row-actions {
+      flex-wrap: nowrap;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+
+    .action-cell button {
+      min-width: 54px;
+      min-height: 32px;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: none;
+      white-space: nowrap;
+    }
+
+    .action-cell .action-copy {
+      background: #eaf4ff;
+      border-color: #b7d8f4;
+      color: #075ca8;
+    }
+
+    .action-cell .action-copy:hover {
+      background: #dceeff;
+      border-color: #87bee8;
+    }
+
+    .action-cell .action-delete {
+      background: #fff1f3;
+      border-color: #f1b7bf;
+      color: #b02d3d;
+    }
+
+    .action-cell .action-delete:hover {
+      background: #fde2e7;
+      border-color: #e58c99;
+    }
+
+    .action-cell .action-terminate {
+      background: #c23b4a;
+      border-color: #c23b4a;
+      color: #fff;
+    }
+
+    .action-cell .action-terminate:hover {
+      background: #aa2d3a;
+      border-color: #aa2d3a;
+    }
+
+    .empty,
+    .loading {
+      padding: 40px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    dialog {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0;
+      width: min(560px, calc(100vw - 32px));
+      box-shadow: var(--shadow);
+    }
+
+    dialog::backdrop {
+      background: rgba(21, 32, 51, .35);
+    }
+
+    .dialog-body {
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .dialog-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .dialog-foot {
+      padding: 14px 18px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%) translateY(16px);
+      opacity: 0;
+      pointer-events: none;
+      background: #162033;
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 7px;
+      box-shadow: var(--shadow);
+      transition: opacity .2s ease, transform .2s ease;
+      z-index: 20;
+      max-width: min(520px, calc(100vw - 32px));
+      text-align: center;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    @media (max-width: 1100px) {
+      .toolbar {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .summary {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 720px) {
+      header {
+        position: static;
+        min-height: auto;
+        align-items: flex-start;
+        padding: 14px 16px;
+        flex-direction: column;
+      }
+
+      .brand {
+        width: 100%;
+      }
+
+      .header-actions {
+        width: 100%;
+      }
+
+      .header-actions button {
+        flex: 1;
+        min-width: 0;
+      }
+
+      main {
+        padding: 14px;
+      }
+
+      .toolbar,
+      .summary {
+        grid-template-columns: 1fr;
+      }
+
+      .metric {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .metric span {
+        margin-bottom: 0;
+      }
+
+      .metric strong {
+        font-size: 24px;
+      }
+
+      .panel-head {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .actions,
+      .row-actions {
+        width: 100%;
+        flex-wrap: wrap;
+      }
+
+      .action-cell .row-actions {
+        flex-wrap: wrap;
+        justify-content: stretch;
+      }
+
+      .action-cell button {
+        min-width: 0;
+      }
+
+      .actions button,
+      .row-actions button {
+        flex: 1 1 calc(50% - 4px);
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+
+      .table-wrap {
+        overflow: visible;
+      }
+
+      table,
+      thead,
+      tbody,
+      tr,
+      th,
+      td {
+        display: block;
+        width: 100%;
+        min-width: 0;
+      }
+
+      table {
+        border-collapse: separate;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tr {
+        border-bottom: 1px solid var(--line);
+        padding: 12px 14px;
+      }
+
+      tr:last-child {
+        border-bottom: 0;
+      }
+
+      td {
+        border-bottom: 0;
+        padding: 7px 0;
+        display: grid;
+        grid-template-columns: 86px minmax(0, 1fr);
+        gap: 10px;
+        align-items: center;
+      }
+
+      td::before {
+        content: attr(data-label);
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      td.select-cell {
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      td.select-cell::before {
+        content: "";
+      }
+
+      td.action-cell {
+        display: block;
+        padding-top: 12px;
+      }
+
+      td.action-cell::before {
+        content: "";
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <section id="loginPage" class="login-page">
+    <form id="loginForm" class="login-box">
+      <div class="login-brand">
+        <div class="mark">K</div>
+        <div>
+          <div class="login-title">PilotX 管理登录</div>
+          <div class="muted">许可证服务后台</div>
+        </div>
+      </div>
+      <div class="login-form">
+        <label>用户名
+          <input id="username" autocomplete="username" value="kang341281x">
+        </label>
+        <label>密码
+          <input id="password" type="password" autocomplete="current-password">
+        </label>
+        <div id="loginError" class="login-error"></div>
+        <button class="primary" id="loginBtn" type="submit">登录</button>
+      </div>
+    </form>
+  </section>
+
+  <div id="app" class="app" hidden>
+    <header>
+      <div class="brand">
+        <div class="mark">K</div>
+        <div class="brand-text">PilotX 许可证管理</div>
+      </div>
+      <div class="header-actions">
+        <button id="refreshBtn">刷新</button>
+        <button id="exportBtn">导出 JSON</button>
+        <button id="importBtn">导入 JSON</button>
+        <button id="logoutBtn" class="ghost">退出</button>
+        <input id="importFile" type="file" accept="application/json" hidden>
+      </div>
+    </header>
+
+    <main>
+      <section class="toolbar" aria-label="生成许可证">
+        <label>有效时间
+          <select id="duration">
+            <option value="A">30 分钟</option>
+            <option value="D">3 小时</option>
+            <option value="B">1 天</option>
+            <option value="C">2 天</option>
+            <option value="E">7 天</option>
+          </select>
+        </label>
+        <label>生成数量
+          <input id="count" type="number" min="1" max="500" value="1">
+        </label>
+        <label>备注
+          <select id="note">
+            <option value="勿删，用户测试">勿删，用户测试</option>
+            <option value="自用">自用</option>
+            <option value="代理001">代理001</option>
+            <option value="代理002">代理002</option>
+            <option value="代理003">代理003</option>
+            <option value="代理004">代理004</option>
+            <option value="代理005">代理005</option>
+            <option value="代理006">代理006</option>
+            <option value="代理007">代理007</option>
+            <option value="代理008">代理008</option>
+            <option value="代理009">代理009</option>
+            <option value="代理010">代理010</option>
+            <option value="代理011">代理011</option>
+            <option value="代理012">代理012</option>
+          </select>
+        </label>
+        <label>搜索
+          <input id="search" placeholder="许可证 / 备注 / 控制端">
+        </label>
+        <label>状态
+          <select id="statusFilter">
+            <option value="all">全部</option>
+            <option value="unused">未激活</option>
+            <option value="active">已激活</option>
+            <option value="expired">已失效</option>
+            <option value="revoked">已终止</option>
+          </select>
+        </label>
+        <button class="primary" id="generateBtn">生成</button>
+      </section>
+
+      <section class="summary" aria-label="统计">
+        <div class="metric"><span>总数</span><strong id="totalCount">0</strong></div>
+        <div class="metric"><span>未激活</span><strong id="unusedCount">0</strong></div>
+        <div class="metric"><span>已激活</span><strong id="activeCount">0</strong></div>
+        <div class="metric"><span>已失效</span><strong id="expiredCount">0</strong></div>
+        <div class="metric"><span>已终止</span><strong id="revokedCount">0</strong></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <strong>许可证列表</strong>
+          <div class="bulk-actions">
+            <button id="bulkCopyBtn" disabled>批量复制</button>
+            <button id="bulkDeleteBtn" class="danger" disabled>批量删除</button>
+          </div>
+        </div>
+        <div id="loading" class="loading">正在加载许可证...</div>
+        <div class="table-wrap">
+          <table id="licenseTable" hidden>
+            <colgroup>
+              <col class="col-select">
+              <col class="col-code">
+              <col class="col-status">
+              <col class="col-duration">
+              <col class="col-activated">
+              <col class="col-note">
+              <col class="col-device">
+              <col class="col-actions">
+            </colgroup>
+            <thead>
+              <tr>
+                <th class="select-cell">
+                  <input id="selectAll" type="checkbox" aria-label="全选">
+                </th>
+                <th style="text-align:left">许可证</th>
+                <th style="text-align:left">状态</th>
+                <th style="text-align:left">有效时间</th>
+                <th style="text-align:left">激活时间</th>
+                <th style="text-align:left">备注</th>
+                <th style="text-align:center">控制端</th>
+                <th style="text-align:center">操作</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <div id="empty" class="empty" hidden>暂无许可证</div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const tokenKey = 'pilotx_admin_token_v2';
+    const durations = {
+      A: { label: '30 分钟', seconds: 1800 },
+      D: { label: '3 小时', seconds: 10800 },
+      B: { label: '1 天', seconds: 86400 },
+      C: { label: '2 天', seconds: 172800 },
+      E: { label: '7 天', seconds: 604800 },
+    };
+    const statusText = {
+      unused: '未激活',
+      active: '已激活',
+      expired: '已失效',
+      revoked: '已终止',
+    };
+    const $ = (id) => document.getElementById(id);
+    const tbody = $('tbody');
+    const empty = $('empty');
+    const table = $('licenseTable');
+    const loading = $('loading');
+    const loginPage = $('loginPage');
+    const app = $('app');
+
+    let token = localStorage.getItem(tokenKey) || '';
+    let records = [];
+    let toastTimer = null;
+
+    function detectBasePath() {
+      const configured = document.querySelector('meta[name="pilotx-base-path"]')?.content?.trim();
+      if (configured) return configured.replace(/\/+$/, '');
+      const marker = '/pilotx-admin';
+      const index = window.location.pathname.indexOf(marker);
+      if (index >= 0) return window.location.pathname.slice(0, index + marker.length);
+      return '';
+    }
+
+    const apiBasePath = detectBasePath();
+
+    function apiUrl(path) {
+      if (/^https?:\/\//i.test(path)) return path;
+      if (path.startsWith('/api/')) return `${apiBasePath}${path}`;
+      if (path.startsWith('api/')) return `${apiBasePath}/${path}`;
+      return path;
+    }
+
+    function showToast(message) {
+      $('toast').textContent = message;
+      $('toast').classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => $('toast').classList.remove('show'), 1800);
+    }
+
+    function setLoggedIn(value) {
+      loginPage.hidden = value;
+      app.hidden = !value;
+      if (value) {
+        loadRecords();
+      }
+    }
+
+    async function request(path, options = {}) {
+      const headers = { ...(options.headers || {}) };
+      if (!(options.body instanceof FormData)) {
+        headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+      }
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const response = await fetch(apiUrl(path), { ...options, headers });
+      const raw = await response.text();
+      let data = {};
+      if (raw) {
+        try {
+          data = JSON.parse(raw);
+        } catch {
+          data = { ok: false, message: raw };
+        }
+      }
+      if (response.status === 401) {
+        localStorage.removeItem(tokenKey);
+        token = '';
+        setLoggedIn(false);
+      }
+      if (!response.ok || data.ok === false) {
+        throw new Error(data.message || '请求失败，请稍后重试。');
+      }
+      return data;
+    }
+
+    async function login(event) {
+      event.preventDefault();
+      $('loginError').textContent = '';
+      $('loginBtn').disabled = true;
+      try {
+        const data = await request('/api/admin/login', {
+          method: 'POST',
+          body: JSON.stringify({
+            username: $('username').value.trim(),
+            password: $('password').value,
+          }),
+        });
+        token = data.token;
+        localStorage.setItem(tokenKey, token);
+        setLoggedIn(true);
+      } catch (error) {
+        $('loginError').textContent = error.message;
+      } finally {
+        $('loginBtn').disabled = false;
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem(tokenKey);
+      token = '';
+      records = [];
+      setLoggedIn(false);
+    }
+
+    async function loadRecords() {
+      loading.hidden = false;
+      table.hidden = true;
+      empty.hidden = true;
+      try {
+        const data = await request('/api/admin/licenses');
+        records = Array.isArray(data.records) ? data.records : [];
+        render();
+      } catch (error) {
+        showToast(error.message);
+      } finally {
+        loading.hidden = true;
+      }
+    }
+
+    async function createRecords() {
+      $('generateBtn').disabled = true;
+      try {
+        const data = await request('/api/admin/licenses', {
+          method: 'POST',
+          body: JSON.stringify({
+            durationKey: $('duration').value,
+            count: Number($('count').value || 1),
+            note: $('note').value,
+          }),
+        });
+        records = Array.isArray(data.all) ? data.all : records;
+        $('note').selectedIndex = 0;
+        render();
+        showToast(`已生成 ${data.records.length} 条许可证`);
+      } catch (error) {
+        showToast(error.message);
+      } finally {
+        $('generateBtn').disabled = false;
+      }
+    }
+
+    function getStatus(record) {
+      if (record.revokedAt || record.status === 'revoked') return 'revoked';
+      if (record.activatedAt && record.expiresAt && Date.now() >= record.expiresAt) {
+        return 'expired';
+      }
+      if (record.activatedAt || record.status === 'active') return 'active';
+      return 'unused';
+    }
+
+    function remainingText(record) {
+      const status = getStatus(record);
+      if (status === 'revoked') return '已终止';
+      if (status === 'unused') return `${durations[record.durationKey]?.label || '-'}（未激活）`;
+      const left = Number(record.expiresAt || 0) - Date.now();
+      if (left <= 0) return '已失效';
+      const days = Math.floor(left / 86400000);
+      const hours = Math.floor((left % 86400000) / 3600000);
+      const minutes = Math.floor((left % 3600000) / 60000);
+      if (days > 0) return `${days} 天 ${hours} 小时`;
+      if (hours > 0) return `${hours} 小时 ${minutes} 分钟`;
+      return `${Math.max(0, minutes)} 分钟`;
+    }
+
+    function fmtTime(value) {
+      if (!value) return '-';
+      const date = typeof value === 'number' ? new Date(value) : new Date(String(value));
+      if (Number.isNaN(date.getTime()) || date.getTime() <= 0) return '-';
+      return date.toLocaleString('zh-CN', { hour12: false });
+    }
+
+    function shortDevice(record) {
+      if (record.deviceName) return record.deviceName;
+      if (!record.deviceId) return '-';
+      const id = String(record.deviceId);
+      return id.length > 12 ? `${id.slice(0, 6)}...${id.slice(-4)}` : id;
+    }
+
+    function filteredRecords() {
+      const query = $('search').value.trim().toLowerCase();
+      const status = $('statusFilter').value;
+      return records.filter((record) => {
+        const haystack = [
+          record.code,
+          record.note,
+          record.deviceId,
+          record.deviceName,
+          record.app,
+          record.version,
+        ].join(' ').toLowerCase();
+        const matchesQuery = !query || haystack.includes(query);
+        const matchesStatus = status === 'all' || getStatus(record) === status;
+        return matchesQuery && matchesStatus;
+      });
+    }
+
+    function render() {
+      const visible = filteredRecords();
+      const counts = records.reduce((acc, record) => {
+        acc[getStatus(record)] += 1;
+        return acc;
+      }, { unused: 0, active: 0, expired: 0, revoked: 0 });
+
+      $('totalCount').textContent = records.length;
+      $('unusedCount').textContent = counts.unused;
+      $('activeCount').textContent = counts.active;
+      $('expiredCount').textContent = counts.expired;
+      $('revokedCount').textContent = counts.revoked;
+
+      tbody.innerHTML = visible.map((record) => {
+        const status = getStatus(record);
+        const disabledTerminate = status === 'revoked';
+        return `
+          <tr>
+            <td class="select-cell" data-label="选择">
+              <input class="row-check" type="checkbox" value="${escapeHtml(record.id)}" aria-label="选择 ${escapeHtml(record.code)}">
+            </td>
+            <td class="code" data-label="许可证">${escapeHtml(record.code)}</td>
+            <td data-label="状态"><span class="status ${status}">${statusText[status]}</span></td>
+            <td data-label="有效时间">${durations[record.durationKey]?.label || '-'}</td>
+            <td data-label="激活时间">${fmtTime(record.activatedAt)}</td>
+            <td data-label="备注" class="note-cell" data-id="${record.id}" data-note="${escapeHtml(record.note || '')}" title="双击编辑备注">${escapeHtml(record.note || '-')}</td>
+            <td data-label="控制端" class="mono device-cell" title="${escapeHtml(record.deviceId || '')}">${escapeHtml(shortDevice(record))}</td>
+            <td class="action-cell" data-label="操作">
+              <div class="row-actions">
+                <button class="action-copy" data-action="copy" data-id="${record.id}">复制</button>
+                <button class="action-terminate" data-action="terminate" data-id="${record.id}" ${disabledTerminate ? 'disabled' : ''}>终止</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      table.hidden = visible.length === 0;
+      empty.hidden = visible.length > 0;
+      updateBulkActions();
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      }[char]));
+    }
+
+    function selectedIds() {
+      return [...document.querySelectorAll('.row-check:checked')].map((item) => item.value);
+    }
+
+    function updateBulkActions() {
+      const checks = [...document.querySelectorAll('.row-check')];
+      const checked = checks.filter((item) => item.checked);
+      const hasSelection = checked.length > 0;
+      $('bulkCopyBtn').disabled = !hasSelection;
+      $('bulkDeleteBtn').disabled = !hasSelection;
+      const selectAll = $('selectAll');
+      selectAll.checked = checks.length > 0 && checked.length === checks.length;
+      selectAll.indeterminate = checked.length > 0 && checked.length < checks.length;
+    }
+
+    function toggleSelectAll(event) {
+      const checked = event.target.checked;
+      document.querySelectorAll('.row-check').forEach((item) => {
+        item.checked = checked;
+      });
+      updateBulkActions();
+    }
+
+    async function copyText(text) {
+      await navigator.clipboard.writeText(text);
+      showToast('已复制');
+    }
+
+    async function rowAction(event) {
+      const button = event.target.closest('button[data-action]');
+      if (!button) return;
+      const record = records.find((item) => item.id === button.dataset.id);
+      if (!record) return;
+      const action = button.dataset.action;
+      if (action === 'copy') {
+        await copyText(record.code);
+        return;
+      }
+      if (action === 'delete') {
+        if (!confirm(`确认删除许可证 ${record.code}？删除后控制端将无法继续使用该许可证。`)) return;
+        await deleteRecord(record.id);
+        return;
+      }
+      if (action === 'terminate') {
+        if (!confirm(`确认终止许可证 ${record.code}？终止后对应控制端下次刷新许可证时将不能继续使用软件。`)) return;
+        await terminateRecord(record.id);
+      }
+    }
+
+    async function inlineEditNote(recordId, newNote) {
+      try {
+        const data = await request(`/api/admin/licenses/${encodeURIComponent(recordId)}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ note: newNote }),
+        });
+        records = records.map((item) => item.id === recordId ? data.record : item);
+        render();
+        showToast('备注已更新');
+      } catch (error) {
+        showToast(error.message);
+        render();
+      }
+    }
+
+    async function deleteRecord(id) {
+      try {
+        const data = await request(`/api/admin/licenses/${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+        });
+        records = Array.isArray(data.records) ? data.records : records.filter((item) => item.id !== id);
+        render();
+        showToast('已删除');
+      } catch (error) {
+        showToast(error.message);
+      }
+    }
+
+    async function terminateRecord(id) {
+      try {
+        const data = await request(`/api/admin/licenses/${encodeURIComponent(id)}/terminate`, {
+          method: 'POST',
+          body: JSON.stringify({ reason: 'admin' }),
+        });
+        records = records.map((item) => item.id === id ? data.record : item);
+        render();
+        showToast('已终止');
+      } catch (error) {
+        showToast(error.message);
+      }
+    }
+
+    async function deleteSelected() {
+      const ids = selectedIds();
+      if (ids.length === 0) {
+        showToast('请先选择许可证');
+        return;
+      }
+      if (!confirm(`确认删除选中的 ${ids.length} 条许可证？删除后对应控制端将无法继续使用。`)) return;
+      try {
+        const data = await request('/api/admin/licenses/bulk-delete', {
+          method: 'POST',
+          body: JSON.stringify({ ids }),
+        });
+        records = Array.isArray(data.records) ? data.records : records.filter((item) => !ids.includes(item.id));
+        render();
+        showToast(`已删除 ${data.deleted || ids.length} 条许可证`);
+      } catch (error) {
+        showToast(error.message);
+      }
+    }
+
+    async function copySelected() {
+      const ids = new Set(selectedIds());
+      const codes = records.filter((item) => ids.has(item.id)).map((item) => item.code);
+      if (codes.length === 0) {
+        showToast('请先选择许可证');
+        return;
+      }
+      await copyText(codes.join('\n'));
+    }
+
+    function exportRecords() {
+      const blob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `pilotx-licenses-${Date.now()}.json`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+      showToast('已导出');
+    }
+
+    function importRecords(file) {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const incoming = JSON.parse(String(reader.result || '[]'));
+          const recordsToImport = Array.isArray(incoming)
+            ? incoming
+            : Array.isArray(incoming.records)
+              ? incoming.records
+              : Array.isArray(incoming.licenses)
+                ? incoming.licenses
+                : [];
+          if (recordsToImport.length === 0) throw new Error('未找到可导入的许可证记录。');
+          const data = await request('/api/admin/import', {
+            method: 'POST',
+            body: JSON.stringify({ mode: 'merge', records: recordsToImport }),
+          });
+          records = data.records;
+          render();
+          showToast(`已导入 ${data.imported} 条许可证`);
+        } catch (error) {
+          showToast(error.message || '导入失败，请检查 JSON 文件。');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    $('loginForm').addEventListener('submit', login);
+    $('logoutBtn').addEventListener('click', logout);
+    $('refreshBtn').addEventListener('click', loadRecords);
+    $('generateBtn').addEventListener('click', createRecords);
+    $('search').addEventListener('input', render);
+    $('statusFilter').addEventListener('change', render);
+    $('tbody').addEventListener('click', rowAction);
+    $('tbody').addEventListener('change', (event) => {
+      if (event.target.classList.contains('row-check')) updateBulkActions();
+    });
+    $('selectAll').addEventListener('change', toggleSelectAll);
+    $('bulkCopyBtn').addEventListener('click', copySelected);
+    $('bulkDeleteBtn').addEventListener('click', deleteSelected);
+    $('exportBtn').addEventListener('click', exportRecords);
+    $('importBtn').addEventListener('click', () => $('importFile').click());
+    $('importFile').addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) importRecords(file);
+      event.target.value = '';
+    });
+    $('tbody').addEventListener('dblclick', (event) => {
+      const cell = event.target.closest('.note-cell');
+      if (!cell) return;
+      const recordId = cell.dataset.id;
+      if (!recordId) return;
+      const currentNote = cell.dataset.note || '';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'note-edit-input';
+      input.value = currentNote;
+      cell.textContent = '';
+      cell.appendChild(input);
+      input.focus();
+      input.select();
+      const finish = async (save) => {
+        const newNote = save ? input.value.trim() : currentNote;
+        input.remove();
+        if (save && newNote !== currentNote) {
+          await inlineEditNote(recordId, newNote);
+        } else {
+          cell.textContent = currentNote || '-';
+        }
+      };
+      input.addEventListener('blur', () => finish(true));
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+        if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+      });
+    });
+
+    setLoggedIn(Boolean(token));
+    setInterval(() => {
+      if (!app.hidden) loadRecords();
+    }, 30000);
+  </script>
+</body>
+
+</html>
