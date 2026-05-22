@@ -1,4 +1,3 @@
-$content = @'
 name: Build macOS DMG
 
 on:
@@ -80,11 +79,11 @@ jobs:
       - name: Sign and package DMG
         run: |
           APP_BUNDLE="flutter/build/macos/Build/Products/Release/PilotX.app"
-          codesign --deep --force --sign "-" "$APP_BUNDLE"
+          codesign --deep --force --sign "-" "\"
           mkdir -p dist
           hdiutil create \
             -volname "PilotX" \
-            -srcfolder "$APP_BUNDLE" \
+            -srcfolder "\" \
             -ov -format UDZO \
             dist/PilotX-controller-mac.dmg
 
@@ -94,13 +93,3 @@ jobs:
           name: PilotX-mac-dmg
           path: dist/*.dmg
           retention-days: 30
-'@
-
-# 用 UTF-8 无 BOM 格式写入
-[System.IO.File]::WriteAllText(
-  'D:\MyProject\rustdesk-mac\.github\workflows\build-mac.yml',
-  $content,
-  [System.Text.UTF8Encoding]::new($false)
-)
-
-Write-Host "文件写入完成"
