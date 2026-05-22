@@ -1,3 +1,4 @@
+$content = @'
 name: Build macOS DMG
 
 on:
@@ -16,17 +17,17 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - name: Checkout 代码
-              uses: actions/checkout@v4
-              with:
-                submodules: recursive
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-      - name: 安装 Rust 工具链
+      - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-apple-darwin,aarch64-apple-darwin
 
-      - name: 缓存 Cargo
+      - name: Cache Cargo
         uses: actions/cache@v4
         with:
           path: |
@@ -37,14 +38,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - name: 安装 Flutter
+      - name: Install Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.24.0'
           channel: 'stable'
           cache: true
 
-      - name: 安装系统依赖
+      - name: Install dependencies
         run: |
           brew install cmake ninja nasm
 
@@ -54,7 +55,7 @@ jobs:
           flutter clean
           flutter pub get
 
-      - name: 编译 Rust FFI
+      - name: Build Rust FFI
         run: |
           cargo build --features flutter --lib --release --target x86_64-apple-darwin
           cargo build --features flutter --lib --release --target aarch64-apple-darwin
@@ -64,19 +65,19 @@ jobs:
             target/aarch64-apple-darwin/release/librustdesk.dylib \
             -output target/universal/release/librustdesk.dylib
 
-      - name: 复制 dylib 到 Flutter
+      - name: Copy dylib to Flutter
         run: |
           mkdir -p flutter/macos/Libs
           cp target/universal/release/librustdesk.dylib flutter/macos/Libs/
 
-      - name: 编译 Flutter macOS
+      - name: Build Flutter macOS
         working-directory: flutter
         run: |
           flutter build macos --release \
             --dart-define=PILOTX_ROLE=controller \
             --dart-define=PILOTX_LICENSE_API=https://yishengyuzhou.asia/pilotx-admin
 
-      - name: 签名 & 打包 DMG
+      - name: Sign and package DMG
         run: |
           APP_BUNDLE="flutter/build/macos/Build/Products/Release/PilotX.app"
           codesign --deep --force --sign "-" "$APP_BUNDLE"
@@ -87,9 +88,19 @@ jobs:
             -ov -format UDZO \
             dist/PilotX-controller-mac.dmg
 
-      - name: 上传 DMG
+      - name: Upload DMG
         uses: actions/upload-artifact@v4
         with:
           name: PilotX-mac-dmg
           path: dist/*.dmg
           retention-days: 30
+'@
+
+# 用 UTF-8 无 BOM 格式写入
+[System.IO.File]::WriteAllText(
+  'D:\MyProject\rustdesk-mac\.github\workflows\build-mac.yml',
+  $content,
+  [System.Text.UTF8Encoding]::new($false)
+)
+
+Write-Host "文件写入完成"
