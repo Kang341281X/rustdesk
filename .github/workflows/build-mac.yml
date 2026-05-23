@@ -46,7 +46,16 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew install cmake ninja nasm pkg-config opus libyuv
+          brew install cmake ninja nasm pkg-config opus nasm
+
+          # 从源码编译 libyuv
+          git clone https://chromium.googlesource.com/libyuv/libyuv.git /tmp/libyuv
+          cd /tmp/libyuv
+          mkdir build && cd build
+          cmake -DCMAKE_BUILD_TYPE=Release ..
+          make -j$(sysctl -n hw.ncpu)
+          sudo make install
+          cd $GITHUB_WORKSPACE
 
       - name: Flutter pub get
         working-directory: flutter
