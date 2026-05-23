@@ -46,7 +46,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew install cmake ninja nasm
+          brew install cmake ninja nasm opus
 
       - name: Flutter pub get
         working-directory: flutter
@@ -54,10 +54,24 @@ jobs:
           flutter clean
           flutter pub get
 
-      - name: Build Rust FFI
+      - name: Build Rust FFI (x86_64)
+        env:
+          OPUS_NO_PKG: 1
+          OPUS_LIB_DIR: /usr/local/lib
+          OPUS_INCLUDE_DIR: /usr/local/include
         run: |
           cargo build --features flutter --lib --release --target x86_64-apple-darwin
+
+      - name: Build Rust FFI (aarch64)
+        env:
+          OPUS_NO_PKG: 1
+          OPUS_LIB_DIR: /opt/homebrew/lib
+          OPUS_INCLUDE_DIR: /opt/homebrew/include
+        run: |
           cargo build --features flutter --lib --release --target aarch64-apple-darwin
+
+      - name: Create Universal Binary
+        run: |
           mkdir -p target/universal/release
           lipo -create \
             target/x86_64-apple-darwin/release/librustdesk.dylib \
