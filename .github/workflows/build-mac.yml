@@ -13,7 +13,7 @@ on:
 
 jobs:
   build-macos:
-    runs-on: macos-13
+    runs-on: macos-latest
 
     steps:
       - name: Checkout code
@@ -48,12 +48,15 @@ jobs:
         run: |
           brew install cmake ninja nasm pkg-config opus
 
-      - name: Install vcpkg and opus
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgGitCommitId: 'a42af01b72c28a8e1d7b48107b33e4f286a55ef6'
+
+      - name: Install opus via vcpkg
         run: |
-          git clone https://github.com/microsoft/vcpkg.git $HOME/vcpkg
-          $HOME/vcpkg/bootstrap-vcpkg.sh
-          $HOME/vcpkg/vcpkg install opus:x64-osx
-          echo "VCPKG_ROOT=$HOME/vcpkg" >> $GITHUB_ENV
+          vcpkg install opus
+          echo "VCPKG_ROOT=$VCPKG_ROOT" >> $GITHUB_ENV
 
       - name: Flutter pub get
         working-directory: flutter
@@ -61,14 +64,13 @@ jobs:
           flutter clean
           flutter pub get
 
+      - name: Build Rust FFI (aarch64)
+        run: |
+          cargo build --features flutter --lib --release --target aarch64-apple-darwin
+
       - name: Build Rust FFI (x86_64)
         run: |
           cargo build --features flutter --lib --release --target x86_64-apple-darwin
-
-      - name: Build Rust FFI (aarch64)
-        run: |
-          $HOME/vcpkg/vcpkg install opus:arm64-osx
-          cargo build --features flutter --lib --release --target aarch64-apple-darwin
 
       - name: Create Universal Binary
         run: |
