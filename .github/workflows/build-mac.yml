@@ -48,16 +48,6 @@ jobs:
         run: |
           brew install cmake ninja nasm pkg-config opus
 
-      - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgGitCommitId: 'a42af01b72c28a8e1d7b48107b33e4f286a55ef6'
-
-      - name: Install opus via vcpkg
-        run: |
-          vcpkg install opus
-          echo "VCPKG_ROOT=$VCPKG_ROOT" >> $GITHUB_ENV
-
       - name: Flutter pub get
         working-directory: flutter
         run: |
@@ -65,10 +55,16 @@ jobs:
           flutter pub get
 
       - name: Build Rust FFI (aarch64)
+        env:
+          PKG_CONFIG_PATH: /opt/homebrew/lib/pkgconfig
+          PKG_CONFIG_ALLOW_CROSS: 1
         run: |
           cargo build --features flutter --lib --release --target aarch64-apple-darwin
 
       - name: Build Rust FFI (x86_64)
+        env:
+          PKG_CONFIG_PATH: /usr/local/lib/pkgconfig
+          PKG_CONFIG_ALLOW_CROSS: 1
         run: |
           cargo build --features flutter --lib --release --target x86_64-apple-darwin
 
@@ -95,11 +91,11 @@ jobs:
       - name: Sign and package DMG
         run: |
           APP_BUNDLE="flutter/build/macos/Build/Products/Release/PilotX.app"
-          codesign --deep --force --sign "-" "\"
+          codesign --deep --force --sign "-" "$APP_BUNDLE"
           mkdir -p dist
           hdiutil create \
             -volname "PilotX" \
-            -srcfolder "\" \
+            -srcfolder "$APP_BUNDLE" \
             -ov -format UDZO \
             dist/PilotX-controller-mac.dmg
 
