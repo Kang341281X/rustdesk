@@ -46,7 +46,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew install cmake ninja nasm pkg-config opus
+          brew install cmake ninja nasm pkg-config opus libyuv
 
       - name: Flutter pub get
         working-directory: flutter
